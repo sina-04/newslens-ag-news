@@ -2,7 +2,7 @@
 
 A controlled comparison of six zero/few-shot prompt conditions and a LoRA-adapted Qwen3.5-4B on all 7,600 AG News test articles, built for a single Colab T4 GPU.
 
-**Status:** implementation and verification in progress. Final accuracy/F1 will be reported only after the complete measured experiment. See [the plan](IMPLEMENTATION_PLAN.md) and [assignment](PROJECT_INSTRUCTIONS.md).
+**Status:** the 50-step Colab T4 compatibility gate passed; full experiments are in progress. Final accuracy/F1 will be reported only after the complete measured experiment. See [the plan](IMPLEMENTATION_PLAN.md), [measured compatibility gate](docs/verification/t4-smoke-gate.json), and [assignment](PROJECT_INSTRUCTIONS.md).
 
 ## Experiment
 
@@ -36,6 +36,8 @@ Model files stay under `MyDrive/NewsLens/models/Qwen3.5-4B`; data/run artifacts 
 The GPU installer starts from the [official Unsloth 4B T4 recipe](https://github.com/unslothai/notebooks/blob/main/nb/Qwen3_5_(4B)_Vision.ipynb). Exact package versions and upstream Git commits are captured after the passing gate. Model weights are not quantized; using an 8-bit optimizer is separate from model quantization. Memory fit and runtime are measured. No paid resources are purchased automatically.
 
 The requested FP16 setup is subject to Unsloth's Qwen3.5 stability guard, which retains sensitive computation in FP32. The runtime records the resulting parameter dtype counts and whether the guard is active. Keep this guard enabled; a pure FP16 claim would misdescribe the executed workload.
+
+The measured T4 gate completed all 50 optimizer steps and gradient checks, recovered from step 25, verified unchanged frozen weights and changed adapter weights, and reproduced eight validation responses after reload. Headroom was 5.30 GiB during the training/inference check and 4.13 GiB after reload. At padded 512-token sequences it measured 48.25 seconds per optimizer step: a conservative 135.49-hour training estimate before validation, plus an 11.21-hour estimate for all final evaluations. Actual full training uses dynamic batches. These estimates are not final experiment timings or test scores. The [GPU environment lock](docs/verification/requirements-gpu.lock.txt) and gate record preserve successful versions and upstream commits.
 
 ## CPU checks and CLI
 

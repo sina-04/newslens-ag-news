@@ -99,11 +99,25 @@ cell("""## Disposable compatibility gate
 
 This performs 50 optimizer steps with a deliberate checkpoint stop/resume at step 25. It verifies frozen weights, adapter updates, finite gradients, reload equivalence, and GPU headroom. Its adapter is discarded from the actual experiment. Read the measured duration estimate before the full run; free Colab sessions may require multiple resumptions.
 """, "markdown")
-cell('''run("smoke-test")
-import json
-gate = json.loads((RUN / "smoke" / "gate.json").read_text())
+cell('''import json, shutil
+gate_file = RUN / "smoke" / "gate.json"
+if not gate_file.is_file() or not json.loads(gate_file.read_text()).get("passed"):
+    run("smoke-test")
+else:
+    print("Reusing the passing gate; evaluation/training enforce matching source, data, configuration and package versions.")
+gate = json.loads(gate_file.read_text())
 assert gate["passed"]
 print({k: gate[k] for k in ("estimated_training_hours_excluding_validation", "estimated_evaluation_hours", "memory")})
+# Discard disposable test weights only; retain the gate, logs and GPU lock.
+smoke = (RUN / "smoke").resolve()
+if smoke != RUN.resolve() / "smoke":
+    raise ValueError("Unexpected smoke-directory symlink")
+for name in ("adapter", "local", "restored", "checkpoints"):
+    path = smoke / name
+    if path.is_symlink() or path.resolve().parent != smoke:
+        raise ValueError("Unsafe smoke cleanup path")
+    if path.is_dir():
+        shutil.rmtree(path)
 ''')
 cell("""## Unchanged-model baseline and prompt experiments
 

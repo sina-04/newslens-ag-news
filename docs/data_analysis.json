@@ -1,0 +1,99 @@
+{
+  "preparation": {
+    "dataset_id": "fancyzhx/ag_news",
+    "seed": 42,
+    "validation_fraction": 0.1,
+    "normalization": "NFKC/casefold/whitespace-v1",
+    "dataset_revision": "eb185aade064a813bc0b7f42de02595523103ca4"
+  },
+  "dataset_revision": "eb185aade064a813bc0b7f42de02595523103ca4",
+  "labels": [
+    "World",
+    "Sports",
+    "Business",
+    "Sci/Tech"
+  ],
+  "content_sha256": "353be888d4db4277898291d8d5eb4d325f8717daefee52d1d2e496ea78a61d06",
+  "identity": {
+    "revision": "eb185aade064a813bc0b7f42de02595523103ca4",
+    "splits": {
+      "train": "b2ce3df96293e317d6fc00612e3c1748930c09f43061e0db275ab240eb0eb7c1",
+      "validation": "921b0009e78e6866b70db34b0ef0bcbfbd66c377f42218aa390c5ccc5b063469",
+      "test": "1bde3f08eda7394b24fbed3170b3f7c9f6ad375190eb521f0a02cf137940b085"
+    },
+    "demonstrations": "c447f302a2bc2a6dc21d75162c2f293a047d06f50c6a7d2560775e761b557a63"
+  },
+  "counts": {
+    "train": 107835,
+    "validation": 11982,
+    "test": 7600
+  },
+  "exclusion_counts": {
+    "test_overlap": 10,
+    "training_duplicate": 129,
+    "conflicting_labels": 44
+  },
+  "class_counts": {
+    "train": {
+      "World": 26981,
+      "Sports": 26977,
+      "Business": 26952,
+      "Sci/Tech": 26925
+    },
+    "validation": {
+      "World": 2998,
+      "Sports": 2997,
+      "Business": 2995,
+      "Sci/Tech": 2992
+    },
+    "test": {
+      "World": 1900,
+      "Sports": 1900,
+      "Business": 1900,
+      "Sci/Tech": 1900
+    }
+  },
+  "character_lengths": {
+    "train": {
+      "min": 100,
+      "max": 1012,
+      "mean": 236.48345156952752
+    },
+    "validation": {
+      "min": 100,
+      "max": 979,
+      "mean": 236.46411283592056
+    },
+    "test": {
+      "min": 100,
+      "max": 892,
+      "mean": 235.2992105263158
+    }
+  },
+  "examples": [
+    {
+      "id": "train:000492",
+      "text": "Venezuelans Vote Early in Referendum on Chavez Rule (Reuters) Reuters - Venezuelans turned out early\\and in large numbers on Sunday to vote in a historic referendum\\that will either remove left-wing President Hugo Chavez from\\office or give him a new mandate to govern for the next two\\years.",
+      "label": 0,
+      "duplicate_sha256": "709ec0f83318465c32c5a8fc1307ebafaa2d0234f46ec3a74a2af5fec75667a4"
+    },
+    {
+      "id": "train:000448",
+      "text": "Phelps, Thorpe Advance in 200 Freestyle (AP) AP - Michael Phelps took care of qualifying for the Olympic 200-meter freestyle semifinals Sunday, and then found out he had been added to the American team for the evening's 400 freestyle relay final. Phelps' rivals Ian Thorpe and Pieter van den Hoogenband and teammate Klete Keller were faster than the teenager in the 200 free preliminaries.",
+      "label": 1,
+      "duplicate_sha256": "89c59136b19c9df55d4b838cb9ab9094c25ad7e4133cfe3ec50a78d8551de559"
+    },
+    {
+      "id": "train:000000",
+      "text": "Wall St. Bears Claw Back Into the Black (Reuters) Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again.",
+      "label": 2,
+      "duplicate_sha256": "1cbb6f3dfb2dad583e896d0e5fdbee1f23d5d381ff356f05f74e6103f4e2139c"
+    },
+    {
+      "id": "train:000079",
+      "text": "Group to Propose New High-Speed Wireless Format (Reuters) Reuters - A group of technology companies\\including Texas Instruments Inc. (TXN.N), STMicroelectronics\\(STM.PA) and Broadcom Corp. (BRCM.O), on Thursday said they\\will propose a new wireless networking standard up to 10 times\\the speed of the current generation.",
+      "label": 3,
+      "duplicate_sha256": "ba1cfe4503802b006e369bdf773523cca21c59e5d66ed702d5910d417d9f0f95"
+    }
+  ]
+}

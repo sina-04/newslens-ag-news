@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "newslens-ag-news"
+version = "0.1.0"
+description = "Controlled AG News prompt and Qwen3.5-4B LoRA experiments"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6", "numpy>=1.26", "scikit-learn>=1.4", "matplotlib>=3.8", "datasets>=3", "huggingface_hub>=0.34"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.scripts]
+newslens = "newslens.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

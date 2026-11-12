@@ -5,6 +5,7 @@ import hashlib
 from pathlib import Path
 import shutil
 import time
+from collections import Counter
 
 from .common import file_digest, read_json, write_json
 from .prompts import parse_response, prompt_ids
@@ -80,6 +81,10 @@ def load_model(model_dir, config, adapter=None, train=False):
             bias="none", random_state=config["seed"],
         )
     if train:
+        # Portable adapters must name the original upstream model, not a Colab-only path.
+        for adapter_config in model.peft_config.values():
+            adapter_config.base_model_name_or_path = config["model_id"]
+            adapter_config.revision = config["model_revision"]
         for name, parameter in model.named_parameters():
             if parameter.requires_grad and ("lora_" not in name or ".visual." in name):
                 raise RuntimeError(f"Unexpected trainable base/vision parameter: {name}")
@@ -88,7 +93,11 @@ def load_model(model_dir, config, adapter=None, train=False):
     else:
         FastVisionModel.for_inference(model)
         model.eval()
-    return model, tokenizer, {"load_seconds": time.perf_counter() - started, "gpu": torch.cuda.get_device_name(0), "gpu_total_bytes": torch.cuda.get_device_properties(0).total_memory}
+    dtypes = Counter()
+    for parameter in model.parameters():
+        dtypes[str(parameter.dtype)] += parameter.numel()
+    return model, tokenizer, {"load_seconds": time.perf_counter() - started, "gpu": torch.cuda.get_device_name(0), "gpu_total_bytes": torch.cuda.get_device_properties(0).total_memory,
+                              "parameter_dtypes": dict(dtypes), "unsloth_precision_guard": bool(getattr(model, "_unsloth_forced_float32", False))}
 
 
 def parameter_hash(model, trainable):
@@ -110,14 +119,16 @@ def generate_one(model, tokenizer, text, condition, demonstrations, config):
     ids, article_truncated = prompt_ids(tokenizer, text, condition, demonstrations, config)
     tokens = torch.tensor([ids], dtype=torch.long, device="cuda")
     started = time.perf_counter()
+    # The official snapshot's text config stops at endoftext, while chat replies
+    # terminate with im_end. Explicitly use both for base and adapter inference.
+    endings = {tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|im_end|>"), tokenizer.convert_tokens_to_ids("<|endoftext|>")}
+    endings = {value for value in endings if value is not None and value != tokenizer.unk_token_id}
     with torch.inference_mode():
         result = model.generate(input_ids=tokens, attention_mask=torch.ones_like(tokens), do_sample=False,
                                 max_new_tokens=config["max_new_tokens"], use_cache=True,
-                                pad_token_id=tokenizer.pad_token_id)
+                                pad_token_id=tokenizer.pad_token_id, eos_token_id=sorted(endings))
     torch.cuda.synchronize()
     generated = result[0, len(ids):].tolist()
-    eos = model.generation_config.eos_token_id
-    endings = set(eos if isinstance(eos, list) else [eos]) | {tokenizer.convert_tokens_to_ids("<|im_end|>")}
     output_truncated = len(generated) >= config["max_new_tokens"] and generated[-1] not in endings
     raw = tokenizer.decode(generated, skip_special_tokens=True)
     return {"raw_response": raw, "prediction": parse_response(raw, output_truncated), "output_truncated": output_truncated,

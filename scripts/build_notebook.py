@@ -42,7 +42,11 @@ cell("""## Install the compatible GPU stack
 Run once in a fresh runtime, then choose **Runtime → Restart session** before continuing. On later sessions, reinstall the package versions and Git revisions captured by the passing smoke test. The installer starts from the official Unsloth T4 recipe.
 """, "markdown")
 cell('''import subprocess, sys
-subprocess.run([sys.executable, "scripts/install_colab.py"], check=True)
+with subprocess.Popen([sys.executable, "-u", "scripts/install_colab.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1) as process:
+    for line in process.stdout:
+        print(line, end="", flush=True)
+    if process.wait():
+        raise RuntimeError("GPU package installation failed")
 ''')
 cell('''from google.colab import drive
 drive.mount("/content/drive")
@@ -54,10 +58,20 @@ DATA = ROOT / "data" / "prepared-v1"
 RUN = ROOT / "runs" / "qwen35-4b-v1"
 MODEL = Path("/content/models/Qwen3.5-4B")
 def run(stage, *extra):
-    subprocess.run([sys.executable, "-u", "-m", "newslens", stage,
-        "--data-dir", str(DATA), "--run-dir", str(RUN), "--model-dir", str(MODEL), *extra], check=True)
+    RUN.mkdir(parents=True, exist_ok=True)
+    command = [sys.executable, "-u", "-m", "newslens", stage,
+        "--data-dir", str(DATA), "--run-dir", str(RUN), "--model-dir", str(MODEL), *extra]
+    with (RUN / (stage + ".log")).open("a") as log:
+        with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1) as process:
+            for line in process.stdout:
+                print(line, end="", flush=True)
+                log.write(line)
+                log.flush()
+            if process.wait():
+                raise RuntimeError("NewsLens stage failed: " + stage)
 run("stage-model")
 run("prepare")
+print(subprocess.check_output([sys.executable, "-m", "pytest", "-q"], stderr=subprocess.STDOUT, text=True))
 ''')
 cell("""## Disposable compatibility gate
 

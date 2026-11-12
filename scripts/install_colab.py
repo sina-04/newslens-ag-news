@@ -16,6 +16,23 @@ def pip(*args):
             raise subprocess.CalledProcessError(process.returncode, process.args)
 
 pip("uv")
+# Resume an existing verified run with its recorded library versions and Git commits.
+gate_path = Path("/content/drive/MyDrive/NewsLens/runs/qwen35-4b-v1/smoke/gate.json")
+if gate_path.exists():
+    gate = json.loads(gate_path.read_text())
+    if gate.get("passed"):
+        locked = []
+        for name, record in gate["environment"]["packages"].items():
+            direct = record.get("direct_url") or {}
+            vcs = direct.get("vcs_info", {})
+            if vcs.get("commit_id"):
+                locked.append(f"{name} @ git+{direct['url']}@{vcs['commit_id']}")
+            else:
+                locked.append(f"{name}=={record['version'].split('+')[0]}")
+        pip(*locked)
+        pip("-e", ".", "--no-deps")
+        print("Recorded GPU stack restored. Restart the session before running NewsLens.")
+        raise SystemExit(0)
 # Match the published Qwen3.5-4B T4 notebook; no moving Git refs in saved provenance.
 import urllib.request
 def head(repo):

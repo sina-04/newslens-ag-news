@@ -136,3 +136,39 @@ def test_experiment_count():
     assert len(CONDITIONS) == 6
     assert len(FINAL_CONDITIONS) == 7
     assert 7600 * len(FINAL_CONDITIONS) == 53200
+
+
+def test_report_requires_complete_comparison_and_recomputes(tmp_path, config):
+    from newslens.reporting import report
+    from newslens.common import read_json
+    dataset = tmp_path / "data"
+    rows = [{"id": f"test:{i}", "label": i, "text": f"Example topic {i}"} for i in range(4)]
+    demos = [{**r, "id": f"train:{r['label']}"} for r in rows]
+    splits = {"train": demos, "validation": [{**r, "id": f"validation:{r['label']}"} for r in rows], "test": rows}
+    for name, values in splits.items():
+        write_rows(dataset / f"{name}.jsonl", values)
+    write_json(dataset / "demonstrations.json", demos)
+    data_id = {"revision": "fixture", "splits": {name: digest(values) for name, values in splits.items()}, "demonstrations": digest(demos)}
+    manifest = {"dataset_revision": "fixture", "content_sha256": digest(data_id), "counts": {name: len(values) for name, values in splits.items()}, "exclusion_counts": {}}
+    write_json(dataset / "manifest.json", manifest)
+    identity = run_identity(config, manifest)
+    run = tmp_path / "run"
+    write_json(run / "protocol.json", identity)
+    for condition in FINAL_CONDITIONS[:-1]:
+        path = run / "predictions" / f"{condition}.jsonl"
+        write_json(path.with_suffix(".manifest.json"), {"identity": identity, "condition": condition})
+        write_rows(path, [{"id": r["id"], "label": r["label"], "prediction": r["label"], "condition": condition, "run_id": identity["run_id"]} for r in rows])
+    with pytest.raises(FileNotFoundError):
+        report(config, dataset, run, tmp_path / "report")
+    condition = FINAL_CONDITIONS[-1]
+    path = run / "predictions" / f"{condition}.jsonl"
+    write_json(path.with_suffix(".manifest.json"), {"identity": identity, "condition": condition})
+    write_rows(path, [{"id": r["id"], "label": r["label"], "prediction": r["label"] if r["label"] != 3 else -1, "condition": condition, "run_id": identity["run_id"]} for r in rows])
+    write_json(run / "smoke" / "gate.json", {"passed": True, "fixture_only": True})
+    write_json(run / "training" / "summary.json", {"best_validation_loss": 0.1, "steps": 1, "epochs": 3, "trainable_parameters": 1, "total_parameters": 10, "hardware": {"gpu": "fixture-only"}, "memory": {"peak_reserved_bytes": 100}, "tokenization": {}})
+    output = tmp_path / "report"
+    metrics = report(config, dataset, run, output)
+    assert metrics["lora_concise_zero"]["accuracy"] == 0.75
+    assert len(list(output.glob("*.png"))) == 14
+    assert "75.00%" in (output / "REPORT.md").read_text(encoding="utf-8")
+    assert read_json(output / "metrics.json")["identity"] == identity

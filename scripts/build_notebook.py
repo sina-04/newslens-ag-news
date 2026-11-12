@@ -51,7 +51,8 @@ with subprocess.Popen([sys.executable, "-u", "scripts/install_colab.py"], stdout
 cell('''from google.colab import drive
 drive.mount("/content/drive")
 from pathlib import Path
-import os, subprocess, sys
+import os, subprocess, sys, json, time, uuid
+from datetime import datetime, timezone
 os.chdir("/content/newslens")
 ROOT = Path("/content/drive/MyDrive/NewsLens")
 DATA = ROOT / "data" / "prepared-v1"
@@ -59,6 +60,16 @@ RUN = ROOT / "runs" / "qwen35-4b-v1"
 MODEL = Path("/content/models/Qwen3.5-4B")
 def run(stage, *extra):
     RUN.mkdir(parents=True, exist_ok=True)
+    session = uuid.uuid4().hex
+    started = time.monotonic()
+    def event(kind, **values):
+        record = {"stage": stage, "session": session, "event": kind,
+            "at_utc": datetime.now(timezone.utc).isoformat(), "elapsed_seconds": time.monotonic() - started, **values}
+        with (RUN / "stage_sessions.jsonl").open("a") as ledger:
+            ledger.write(json.dumps(record) + "\\n")
+            ledger.flush()
+            os.fsync(ledger.fileno())
+    event("start", arguments=list(extra))
     command = [sys.executable, "-u", "-m", "newslens", stage,
         "--data-dir", str(DATA), "--run-dir", str(RUN), "--model-dir", str(MODEL), *extra]
     with (RUN / (stage + ".log")).open("a") as log:
@@ -68,13 +79,18 @@ def run(stage, *extra):
                     print(line, end="", flush=True)
                     log.write(line)
                     log.flush()
+                    if line.lstrip().startswith("{"):
+                        event("progress", message=line.strip())
             except BaseException:
+                event("interrupted")
                 if process.poll() is None:
                     process.terminate()
                     process.wait(timeout=30)
                 raise
             if process.wait():
+                event("failed", returncode=process.returncode)
                 raise RuntimeError("NewsLens stage failed: " + stage)
+            event("completed")
 run("stage-model")
 run("prepare")
 print(subprocess.check_output([sys.executable, "-m", "pytest", "-q"], stderr=subprocess.STDOUT, text=True))
@@ -128,7 +144,7 @@ with zipfile.ZipFile(export, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for path in (RUN / relative).rglob("*"):
             if path.is_file():
                 archive.write(path, path.relative_to(RUN))
-    for relative in ("protocol.json", "execution_manifest.json", "smoke/gate.json", "smoke/requirements-gpu.lock.txt", "training/summary.json"):
+    for relative in ("protocol.json", "execution_manifest.json", "smoke/gate.json", "smoke/requirements-gpu.lock.txt", "training/summary.json", "stage_sessions.jsonl"):
         archive.write(RUN / relative, relative)
 files.download(str(export))
 ''')

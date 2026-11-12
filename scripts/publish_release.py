@@ -86,7 +86,7 @@ def check_asset(asset, path):
 
 def check_bundle(bundle, run):
     expected = {str(p.relative_to(run)).replace("\\", "/"): p for p in (run / "adapter").rglob("*") if p.is_file()}
-    for name in ("protocol.json", "execution_manifest.json", "smoke/gate.json", "smoke/requirements-gpu.lock.txt", "training/summary.json"):
+    for name in ("protocol.json", "execution_manifest.json", "smoke/gate.json", "smoke/requirements-gpu.lock.txt", "training/summary.json", "stage_sessions.jsonl"):
         expected[name] = run / name
     with zipfile.ZipFile(bundle) as archive:
         if len(archive.namelist()) != len(set(archive.namelist())) or set(archive.namelist()) != set(expected) | {"checksums.json", "BASE_MODEL.txt"}:

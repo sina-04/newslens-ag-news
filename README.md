@@ -64,6 +64,8 @@ Common arguments: `--config`, `--data-dir`, `--model-dir`, `--run-dir`, `--work-
 
 The report produces `REPORT.md`, `comparison.csv`, `metrics.json`, 14 confusion-matrix PNGs, short error excerpts, a run manifest and checksums. Final prediction files contain IDs, labels, raw/parsed outputs, timing and provenance rather than a dataset copy. The adapter release requires the exact original base revision for reload.
 
+After downloading a complete result bundle, `python scripts/verify_results.py /path/to/newslens-results.zip` verifies the run, reparses all raw responses, recomputes reports and assembles the adapter release ZIP. `scripts/publish_release.py` checks the clean `main` branch and verified payload before publication; its default mode makes no GitHub changes. Publishing with `--publish` requires matching remote `main`, verifies uploaded asset digests, and downloads the published assets again to check their SHA-256 values. Existing published releases are never overwritten.
+
 One seed does not quantify training variance. Exact normalized deduplication cannot remove all related stories. AG News is a historic four-topic benchmark, not evidence of performance on current news or new categories. A 90% macro F1 goal is not a promised result.
 
 ## Sources and licensing

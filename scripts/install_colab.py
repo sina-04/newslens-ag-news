@@ -21,16 +21,14 @@ gate_path = Path("/content/drive/MyDrive/NewsLens/runs/qwen35-4b-v1/smoke/gate.j
 if gate_path.exists():
     gate = json.loads(gate_path.read_text())
     if gate.get("passed"):
-        locked = []
-        for name, record in gate["environment"]["packages"].items():
-            direct = record.get("direct_url") or {}
-            vcs = direct.get("vcs_info", {})
-            if vcs.get("commit_id"):
-                locked.append(f"{name} @ git+{direct['url']}@{vcs['commit_id']}")
-            else:
-                locked.append(f"{name}=={record['version'].split('+')[0]}")
+        from colab_lock import locked_requirements
+        expected_python = tuple(map(int, gate["environment"]["python"].split()[0].split(".")[:2]))
+        if sys.version_info[:2] != expected_python:
+            raise SystemExit(f"Use Colab Python {expected_python[0]}.{expected_python[1]} to match the passing GPU gate.")
+        locked, kernels = locked_requirements(gate, gate_path.with_name("requirements-gpu.lock.txt").read_text())
         pip(*locked)
-        pip("-e", ".", "--no-deps")
+        pip("--no-deps", *kernels)
+        pip("-e", ".", "pytest")
         print("Recorded GPU stack restored. Restart the session before running NewsLens.")
         raise SystemExit(0)
 # Match the published Qwen3.5-4B T4 notebook; no moving Git refs in saved provenance.

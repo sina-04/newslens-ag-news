@@ -63,10 +63,16 @@ def run(stage, *extra):
         "--data-dir", str(DATA), "--run-dir", str(RUN), "--model-dir", str(MODEL), *extra]
     with (RUN / (stage + ".log")).open("a") as log:
         with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1) as process:
-            for line in process.stdout:
-                print(line, end="", flush=True)
-                log.write(line)
-                log.flush()
+            try:
+                for line in process.stdout:
+                    print(line, end="", flush=True)
+                    log.write(line)
+                    log.flush()
+            except BaseException:
+                if process.poll() is None:
+                    process.terminate()
+                    process.wait(timeout=30)
+                raise
             if process.wait():
                 raise RuntimeError("NewsLens stage failed: " + stage)
 run("stage-model")

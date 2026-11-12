@@ -138,6 +138,36 @@ def test_experiment_count():
     assert 7600 * len(FINAL_CONDITIONS) == 53200
 
 
+@pytest.mark.parametrize("truncated", [False, True])
+def test_generation_stops_at_chat_end_and_rejects_truncation(config, monkeypatch, truncated):
+    torch = pytest.importorskip("torch")
+    from newslens.runtime import generate_one
+    original_tensor = torch.tensor
+    monkeypatch.setattr(torch, "tensor", lambda *args, **kwargs: original_tensor(*args, **{**kwargs, "device": "cpu"}))
+    monkeypatch.setattr(torch.cuda, "synchronize", lambda: None)
+
+    class ChatTokenizer(Tokenizer):
+        eos_token_id = 3
+
+        def convert_tokens_to_ids(self, token):
+            return {"<|im_end|>": 3, "<|endoftext|>": 4}.get(token, -2)
+
+        def decode(self, ids, skip_special_tokens=False):
+            return "".join(chr(i - 10) for i in ids if not skip_special_tokens or i >= 10)
+
+    tokenizer = ChatTokenizer()
+
+    class Model:
+        def generate(self, input_ids, **kwargs):
+            assert kwargs["eos_token_id"] == [3, 4]
+            generated = tokenizer.encode("World" + " " * 11) if truncated else tokenizer.encode("World") + [3]
+            return torch.cat([input_ids, original_tensor([generated])], dim=1)
+
+    result = generate_one(Model(), tokenizer, "sample", "concise_zero", [], config)
+    assert result["prediction"] == (-1 if truncated else 0)
+    assert result["output_truncated"] is truncated
+
+
 def test_report_requires_complete_comparison_and_recomputes(tmp_path, config):
     from newslens.reporting import report
     from newslens.common import read_json

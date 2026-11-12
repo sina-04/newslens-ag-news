@@ -1,0 +1,43 @@
+{
+  "identity": {
+    "config": {
+      "model_id": "Qwen/Qwen3.5-4B",
+      "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "dataset_id": "fancyzhx/ag_news",
+      "dataset_revision": "eb185aade064a813bc0b7f42de02595523103ca4",
+      "seed": 42,
+      "validation_fraction": 0.1,
+      "article_tokens": 256,
+      "demonstration_tokens": 64,
+      "training_tokens": 512,
+      "context_tokens": 1024,
+      "max_new_tokens": 16,
+      "epochs": 3,
+      "learning_rate": 0.0002,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.03,
+      "max_grad_norm": 1.0,
+      "microbatch": 1,
+      "gradient_accumulation": 32,
+      "lora_r": 16,
+      "lora_alpha": 32,
+      "lora_dropout": 0.0,
+      "checkpoint_steps": 100,
+      "prediction_checkpoint_examples": 100,
+      "smoke_steps": 50,
+      "minimum_headroom_gib": 1.0
+    },
+    "data_sha256": "353be888d4db4277898291d8d5eb4d325f8717daefee52d1d2e496ea78a61d06",
+    "source_sha256": "d4a50358c75471308a8cd18e75166c90ed2e997113c099cf1ea55d41cca289de",
+    "run_id": "6b954fa8cb5012679c3daf8df8e55d6c775e6caca755bdce6f71af35075becd9"
+  },
+  "step": 100,
+  "epoch": 0.029674966383827144,
+  "max_steps": 10110,
+  "archive_bytes": 185171943,
+  "archive_sha256": "d700b6fdfce6edcdefcd2297e69d9e087a2514113440c2d3d1a191aa5ad707a8",
+  "archive_checksum_verified": true,
+  "safe_restore_verified": true,
+  "required_recovery_files_present": true,
+  "gpu_resume_verification": "Verified in the disposable gate; full-run GPU resume will be checked when required."
+}

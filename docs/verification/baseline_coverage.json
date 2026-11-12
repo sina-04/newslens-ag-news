@@ -1,0 +1,80 @@
+{
+  "identity": {
+    "config": {
+      "model_id": "Qwen/Qwen3.5-4B",
+      "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "dataset_id": "fancyzhx/ag_news",
+      "dataset_revision": "eb185aade064a813bc0b7f42de02595523103ca4",
+      "seed": 42,
+      "validation_fraction": 0.1,
+      "article_tokens": 256,
+      "demonstration_tokens": 64,
+      "training_tokens": 512,
+      "context_tokens": 1024,
+      "max_new_tokens": 16,
+      "epochs": 3,
+      "learning_rate": 0.0002,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.03,
+      "max_grad_norm": 1.0,
+      "microbatch": 1,
+      "gradient_accumulation": 32,
+      "lora_r": 16,
+      "lora_alpha": 32,
+      "lora_dropout": 0.0,
+      "checkpoint_steps": 100,
+      "prediction_checkpoint_examples": 100,
+      "smoke_steps": 50,
+      "minimum_headroom_gib": 1.0
+    },
+    "data_sha256": "353be888d4db4277898291d8d5eb4d325f8717daefee52d1d2e496ea78a61d06",
+    "source_sha256": "d4a50358c75471308a8cd18e75166c90ed2e997113c099cf1ea55d41cca289de",
+    "run_id": "6b954fa8cb5012679c3daf8df8e55d6c775e6caca755bdce6f71af35075becd9"
+  },
+  "conditions": {
+    "concise_zero": {
+      "examples": 7600,
+      "exact_test_ids_once": true,
+      "raw_response_parsing_matches": true,
+      "prediction_file_sha256": "f030804e00ed32676f169fb6ea7b73eb78549b32cf96bc25e74dc511ccd47ce6",
+      "generation_seconds": 1887.8076358560093
+    },
+    "concise_four": {
+      "examples": 7600,
+      "exact_test_ids_once": true,
+      "raw_response_parsing_matches": true,
+      "prediction_file_sha256": "b6db93a95bcd149f9e3d9358fc71afddf67ef5f29ba633680cba64c9b2d5f1a6",
+      "generation_seconds": 3583.0689915869425
+    },
+    "definitions_zero": {
+      "examples": 7600,
+      "exact_test_ids_once": true,
+      "raw_response_parsing_matches": true,
+      "prediction_file_sha256": "5651af7f7e630235ad3d9382acfae9b7948109aed3615ac13ca95918e9b3cf45",
+      "generation_seconds": 2042.9091149179712
+    },
+    "definitions_four": {
+      "examples": 7600,
+      "exact_test_ids_once": true,
+      "raw_response_parsing_matches": true,
+      "prediction_file_sha256": "ad8f9c6fa5c2057b123e30867c2906f556c2de0369dc247ef14d773a5a674d41",
+      "generation_seconds": 3786.9024711268885
+    },
+    "guidance_zero": {
+      "examples": 7600,
+      "exact_test_ids_once": true,
+      "raw_response_parsing_matches": true,
+      "prediction_file_sha256": "67b642ee6772d0a85d08bd3b899cf4dc51f54add1f95b14734633130af5a9984",
+      "generation_seconds": 2153.3444201068633
+    },
+    "guidance_four": {
+      "examples": 7600,
+      "exact_test_ids_once": true,
+      "raw_response_parsing_matches": true,
+      "prediction_file_sha256": "fb1a66a32d52090716aa5d2d444385c9ce90c0b8336c176b1905a215e17f6e4d",
+      "generation_seconds": 3897.074474482859
+    }
+  },
+  "total_predictions": 45600,
+  "scope": "Coverage, parsing, generation timing and provenance only; final classification metrics require all seven conditions."
+}

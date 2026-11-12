@@ -2,7 +2,7 @@
 
 A controlled comparison of six zero/few-shot prompt conditions and a LoRA-adapted Qwen3.5-4B on all 7,600 AG News test articles, built for a single Colab T4 GPU.
 
-**Status:** the 50-step Colab T4 compatibility gate passed; full experiments are in progress. Final accuracy/F1 will be reported only after the complete measured experiment. See [the plan](IMPLEMENTATION_PLAN.md), [measured compatibility gate](docs/verification/t4-smoke-gate.json), and [assignment](PROJECT_INSTRUCTIONS.md).
+**Status:** the 50-step Colab T4 compatibility gate passed, all six unchanged-model conditions completed, and full three-epoch LoRA training is running. All 45,600 baseline predictions passed independent ID/provenance/raw-parsing checks; see [coverage proof](docs/verification/baseline_coverage.json). The [first full-training checkpoint](docs/verification/full_checkpoint_100.json) passed archive checksum and recovery-payload verification. Final accuracy/F1 will be reported only after the complete measured experiment. See [the plan](IMPLEMENTATION_PLAN.md), [measured compatibility gate](docs/verification/t4-smoke-gate.json), and [assignment](PROJECT_INSTRUCTIONS.md).
 
 ## Experiment
 

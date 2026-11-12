@@ -12,7 +12,7 @@ A controlled comparison of six zero/few-shot prompt conditions and a LoRA-adapte
 | Revision | `851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a` |
 | Data | Full eligible training pool; stratified 90/10 train/validation; all 7,600 test rows |
 | Prompts | Concise, definitions, ambiguity guidance; each zero-shot/four-shot |
-| LoRA | Language-only; rank 16, alpha 32, dropout 0; frozen unquantized FP16 base |
+| LoRA | Language-only; rank 16, alpha 32, dropout 0; frozen unquantized base with Unsloth's Qwen3.5 precision safeguards |
 | Training | 3 epochs, learning rate 2e-4, effective batch 32, response-only loss |
 | Generation | Thinking disabled, greedy decoding, maximum 16 generated tokens |
 | Primary comparison | Unchanged concise zero-shot versus LoRA with identical prompt |
@@ -34,6 +34,8 @@ Use [the reproducible notebook](notebooks/newslens_ag_news.ipynb), which preserv
 Model files stay under `MyDrive/NewsLens/models/Qwen3.5-4B`; data/run artifacts persist under `MyDrive/NewsLens/data` and `MyDrive/NewsLens/runs`. Repeating an interrupted stage resumes only artifacts with matching source/configuration/model/data identities. Checkpoint archives include optimizer, scheduler, RNG and training progress. The two latest recoveries and best checkpoint are retained to bound Drive storage.
 
 The GPU installer starts from the [official Unsloth 4B T4 recipe](https://github.com/unslothai/notebooks/blob/main/nb/Qwen3_5_(4B)_Vision.ipynb). Exact package versions and upstream Git commits are captured after the passing gate. Model weights are not quantized; using an 8-bit optimizer is separate from model quantization. Memory fit and runtime are measured. No paid resources are purchased automatically.
+
+The requested FP16 setup is subject to Unsloth's Qwen3.5 stability guard, which retains sensitive computation in FP32. The runtime records the resulting parameter dtype counts and whether the guard is active. Keep this guard enabled; a pure FP16 claim would misdescribe the executed workload.
 
 ## CPU checks and CLI
 

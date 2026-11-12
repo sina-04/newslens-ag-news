@@ -5,6 +5,7 @@ No GitHub writes occur here. A missing/incomplete experiment fails closed.
 from pathlib import Path
 import argparse
 import json
+import math
 import shutil
 import sys
 import zipfile
@@ -14,19 +15,26 @@ sys.path.insert(0, str(ROOT / "src"))
 from newslens.common import file_digest, folder_digest, load_config, read_json, run_identity, write_json
 from newslens.data import load_prepared
 from newslens.reporting import report
+from newslens import FINAL_CONDITIONS
+from newslens.evaluation import validate_predictions
+from newslens.prompts import parse_response
 
 
 def verify_run(run, config, data):
-    _, _, dataset = load_prepared(data)
+    splits, _, dataset = load_prepared(data)
     identity = run_identity(config, dataset)
     gate = read_json(run / "smoke" / "gate.json")
     if not gate["passed"] or gate["identity"] != identity or gate["optimizer_steps"] != config["smoke_steps"]:
         raise ValueError("No matching completed smoke gate.")
+    if gate.get("gradient_checks") != config["smoke_steps"]:
+        raise ValueError("The gate did not verify every optimizer step's gradients.")
     for field in ("frozen_base_unchanged", "adapter_changed", "checkpoint_resume_verified", "reload_predictions_match"):
         if gate.get(field) is not True:
             raise ValueError(f"Required GPU verification missing: {field}")
     if gate["memory"]["estimated_peak_headroom_bytes"] < config["minimum_headroom_gib"] * 2**30:
         raise ValueError("GPU headroom requirement was not met.")
+    if gate["reload_memory"]["estimated_peak_headroom_bytes"] < config["minimum_headroom_gib"] * 2**30:
+        raise ValueError("Reload inference headroom requirement was not met.")
     training = read_json(run / "training" / "summary.json")
     if training["identity"] != identity or training["epochs"] < config["epochs"] - 0.001:
         raise ValueError("Incomplete or mismatched full training.")
@@ -40,6 +48,17 @@ def verify_run(run, config, data):
     metadata = read_json(run / "predictions" / "lora_concise_zero.manifest.json")
     if metadata["adapter_sha256"] != adapter_sha:
         raise ValueError("The adapter differs from the one evaluated.")
+    for condition in FINAL_CONDITIONS:
+        rows = validate_predictions(run / "predictions" / f"{condition}.jsonl", splits["test"], identity, condition)
+        for row in rows:
+            if row["prediction"] != parse_response(row["raw_response"], row["output_truncated"]):
+                raise ValueError(f"Stored parsed label disagrees with raw response: {condition}/{row['id']}")
+            if not 0 < row["prompt_tokens"] <= config["context_tokens"] - config["max_new_tokens"]:
+                raise ValueError("Prediction prompt exceeds the frozen context budget.")
+            if not 0 < row["generated_tokens"] <= config["max_new_tokens"]:
+                raise ValueError("Prediction generation exceeds the frozen token budget.")
+            if not math.isfinite(row["seconds"]) or row["seconds"] < 0:
+                raise ValueError("Invalid measured generation time.")
     return identity
 
 
